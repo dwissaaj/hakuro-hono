@@ -1,19 +1,22 @@
 import { Hono } from 'hono'
-import { Prisma, PrismaClient } from "@prisma/client";
-import { PrismaD1 } from "@prisma/adapter-d1";
-import { env } from 'hono/adapter';
-import book from './blog/book'
+import dataService from './lib/prisma';
 
 
-type Bindings = {
+type Env = {
   MY_KV: KVNamespace,
-  Env: D1Database
+  DB: D1Database
 }
-const app = new Hono< {Bindings: Bindings}>()
+const app = new Hono< {Bindings: Env}>()
 app.get('/', async (c) => {
-  return c.text('asdas')
+  const prisma = (await dataService.fetch(c.env.DB))
+  const users = await prisma.user.findMany()
+  console.log('users',users)
+  return c.json(users)
 })
-
-
+app.get('/all', async (c) => {
+  const prisma = (await dataService.fetch(c.env.DB)).user.findMany()
+  console.log('data',prisma)
+  return c.json(prisma)
+})
 export default app
 
